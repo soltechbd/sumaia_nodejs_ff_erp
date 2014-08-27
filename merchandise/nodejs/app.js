@@ -152,7 +152,7 @@ app.post('/supplier_list', function(req, res) {
     console.log(req.body);
 });
 
-app.get('/all_store_item', function(req, res){
+/*app.get('/all_store_item', function(req, res){
     SaveItem(function(list) {
         res.setHeader('Content-Type', 'application/json');
         res.send(list);
@@ -162,7 +162,7 @@ app.get('/all_store_item', function(req, res){
 
 app.post('/all_store_item', function(req, res) {
     console.log(req.body);
-});
+});*/
 
 
 
@@ -186,19 +186,22 @@ io.on('connection', function (socket) {
         })
 
     });
-    /*socket.on('update',function(updateitem){
-        updateitem.find({ where: {id: this.id} }).on('success', function(item_update) {
-            if (item_update) { // if the record exists in the db
-                item_update.updateAttributes({
+    socket.on('all_store_item',function(updateitem){
 
+        var updatedITEMS=JSON.parse(updateitem)
+        //console.log("STEP 1: "+JSON.stringify(updatedITEMS))
 
-                }).success(function() {});
-            }
-        })
-
-    });*/
+        for (var i = 0; i < updatedITEMS.length; i++) {
+            console.log("Item ID:"+updatedITEMS[i].id)
+            UpdateItem(updatedITEMS[i],function(m){
+                console.log(m)
+            })
+        }
+    });
 
 });
+
+
 
 
 
@@ -285,20 +288,31 @@ function AddNewItem (SUB)
     }
 }
 
+function UpdateItem(item,callback)
+{
+    item_table.find({ where: {id: item.id} }).on('success', function(project) {
+        if (project) {
+            project.updateAttributes({
+                 item_name: item.item_name,
+                 item_type: item.item_type_id,
+                 unit_type: item.unit_type_id,
+                 item_description:item.item_description,
+                 item_color: item.color_type_id,
+                 item_supplier: item.supplier_id,
+                 item_comment: item.item_comment
+             }).success(function() {
+                    callback("success");
+             });
+        }
+    })
+}
+
+
 function ShowAllItem(callback)
 {
     sequelize.query("SELECT a.id, a.item_name, a.item_description, b.id AS item_type_id, b.item_type_name, c.id AS color_type_id, c.color_type_name, s.id AS supplier_id, s.supplier_name, u.id AS unit_type_id, u.unit_type_name, a.item_comment FROM item a, item_type b, color_type c, supplier s, unit_type u WHERE a.item_type = b.id AND a.item_color = c.id AND a.item_supplier = s.id AND a.unit_type = u.id ORDER BY a.id ASC").success(function (item) {
         callback(item)
     });
-}
-
-function SaveItem()
-{
-    sequelize.query("").success(function (item) {
-        callback(item)
-    });
-
-
 }
 
 
