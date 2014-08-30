@@ -31,7 +31,11 @@ var color_type_table=require('./node_library/models/color_type.js')(sequelize),
     item_type_table=require('./node_library/models/item_type.js')(sequelize),
     item_table=require('./node_library/models/item.js')(sequelize),
     supplier_table=require('./node_library/models/supplier.js')(sequelize),
-    unit_type_table=require('./node_library/models/unit_type.js')(sequelize);
+    unit_type_table=require('./node_library/models/unit_type.js')(sequelize),
+    buyer_table=require('./node_library/models/buyer_table.js')(sequelize),
+    style_table=require('./node_library/models/style.js')(sequelize),
+    order_table=require('./node_library/models/order_table.js')(sequelize),
+    order_table_items=require('./node_library/models/order_table_items.js')(sequelize);
 
 sequelize
     .sync({ force: false })
@@ -115,6 +119,32 @@ app.post('/item_list', function(req, res) {
     console.log(req.body);
 });
 
+app.get('/itemdes_list', function(req, res){
+    Showitdes(function(list) {
+        res.setHeader('Content-Type', 'application/json');
+        res.send(list);
+        res.end("");
+
+    })
+});
+
+app.post('/itemdes_list', function(req, res) {
+    console.log(req.body);
+});
+
+app.get('/item_description_list', function(req, res){
+    showAlldescription(function(description) {
+        res.setHeader('Content-Type', 'application/json');
+        res.send(description);
+        res.end("");
+
+    })
+});
+
+app.post('/item_description_list', function(req, res) {
+    console.log(req.body);
+});
+
 app.get('/unit_list', function(req, res){
     ShowAllUnit(function(unit_list) {
         res.setHeader('Content-Type', 'application/json');
@@ -152,21 +182,46 @@ app.post('/supplier_list', function(req, res) {
     console.log(req.body);
 });
 
-/*app.get('/all_store_item', function(req, res){
-    SaveItem(function(list) {
+/*buyer & style etc starts*/
+app.get('/buyer_list', function(req, res){
+    buyer_table.findAll().complete(function(err, odr) {
         res.setHeader('Content-Type', 'application/json');
-        res.send(list);
+        res.send(odr);
         res.end("");
+
     })
 });
 
-app.post('/all_store_item', function(req, res) {
+app.post('/buyer_list', function(req, res) {
     console.log(req.body);
-});*/
+});
 
+app.get('/style_list', function(req, res){
+    style_table.findAll().complete(function(err, stt) {
+        res.setHeader('Content-Type', 'application/json');
+        res.send(stt);
+        res.end("");
 
+    })
+});
 
+app.post('/style_list', function(req, res) {
+    console.log(req.body);
+});
 
+/*app.get('/order_list', function(req, res){
+    ShowAllOrder(function(orderlst) {
+        res.setHeader('Content-Type', 'application/json');
+        res.send(orderlst);
+        res.end("");
+
+    })
+});
+
+app.post('/order_list', function(req, res) {
+    console.log(req.body);
+});
+*/
 
 io.on('connection', function (socket) {
     console.log("A stranger have want to mass with me. ;D");
@@ -199,9 +254,38 @@ io.on('connection', function (socket) {
         }
     });
 
+    socket.on('all_order_items',function(data){
+
+        console.log("STEP order_input: "+JSON.stringify(data))
+
+        buyerupdater(data, function(data){
+            stylerupdater(data,function(data){
+                console.log("style")
+                AddOrder(data)
+                console.log("order_table is updated")
+                AddOrderItems(data)
+                console.log("order_items is updated")
+
+            })
+        })
+
+    });
+    /*socket.on('all_order_list',function(updateodr){
+
+        var updatedORDER=JSON.parse(updateodr)
+        //console.log("STEP 1: "+JSON.stringify(updatedORDER))
+
+        for (var i = 0; i < updatedORDER.length; i++) {
+            console.log("order ID:"+updatedORDER[i].id)
+            UpdateOrder(updatedORDER[i],function(m){
+                console.log(m)
+            })
+        }
+    });
+*/
+
+
 });
-
-
 
 
 
@@ -315,6 +399,21 @@ function ShowAllItem(callback)
     });
 }
 
+function Showitdes(callback)
+{
+    sequelize.query("SELECT a.item_name, a.item_description, c.color_type_name, s.supplier_name FROM item a, color_type c, supplier s WHERE a.item_color = c.id AND a.item_supplier = s.id ORDER BY a.id ASC").success(function (item) {
+        callback(item)
+    });
+}
+
+
+function showAlldescription(callback)
+{
+
+    sequelize.query("SELECT a.item_description  FROM item a ").success(function (descrip) {
+        callback(descrip)
+    });
+}
 
 
 function ShowAllUnit(callback)
@@ -336,3 +435,112 @@ function ShowAllSupplier(callback)
         callback(supplierlist)
     });
 }
+
+
+
+/*Order,buyer,style input function*/
+
+function buyerupdater(ORDER, callback)
+{
+    if(ORDER.buyers.new_buyer_found){
+        buyer_table.create({
+            buyer_name: ORDER.buyers.value
+        }).complete(function(err, buyer_type) {
+            ORDER.buyers.value=buyer_type.id; // Changing value to new buyer id
+            callback(ORDER)
+        })
+    }else{
+        callback(ORDER)
+    }
+}
+function stylerupdater(ORDER, callback)
+{
+    if(ORDER.styles.new_style_found){
+        style_table.create({
+            style_name: ORDER.styles.value
+        }).complete(function(err, style_type) {
+            ORDER.styles.value=style_type.id; // Changing value to new buyer id
+            callback(ORDER)
+        })
+    }else{
+        callback(ORDER)
+    }
+}
+
+function AddOrder(ORDER)
+{
+    if(!validator.isNull(ORDER.buyers.value) && !validator.isNull(ORDER.styles.value)) {
+
+        order_table.create({
+            buyer_id: ORDER.buyers.value,
+            style_id: ORDER.styles.value,
+            po_number: ORDER.poNo,
+            shipment_date: ORDER.shiftDate,
+            quantity: ORDER.qtyPcs,
+            meta_data: ORDER.data
+
+        }).complete(function (err, order) {
+            // console.log("ITEM ENTERED "+item.id);
+        })
+
+    }
+}
+
+function AddOrderItems(ORDER)
+{
+    return 0;
+    console.log("order ENTERED "+ORDER);
+
+    order_table_items.create({
+        order_id:ORDER.order_id,
+        item_id:ORDER.item_id,
+        unit_number:ORDER.unit_number,
+        unit_type_id:ORDER.unitTypes.value,
+        color_id: ORDER.colors.value,
+        total_quantity: ORDER.total_quantity,
+        quantity_unit_type_id:ORDER.quantity_unit_type_id ,
+        supplier_id: ORDER.suppliers.value,
+        excess_percentage: ORDER.excess_percentage ,
+        total_quantity_with_excess_percentage:ORDER.total_quantity_with_excess_percentage,
+        comment:ORDER.comm
+
+        }).complete(function (err, orderitem) {
+           console.log("order ENTERED "+ORDER);
+        })
+
+
+}
+/*
+function ShowAllOrder(callback)
+{
+ sequelize.query("SELECT a.id, o.id AS order_id , b.id AS item_id, a.unit_number, u.id AS unit_type_id, c.id AS color_id,a.total_quantity,a.quantity_unit_type_id, s.id AS supplier_id, a.comment FROM order_items_table a, order_table o, item b, unit_type u, color_type c, supplier s WHERE a.order_id = o.id AND a.item_id=b.id AND a.unit_type_id=u.id AND a.color_id=c.id AND a.supplier_id=s.id ORDER BY a.id ASC").success(function (order) {
+ callback(order)
+ });
+}
+
+
+ function updatedORDER(odr,callback)
+ {
+     order_table_items.find({ where: {id: odr.id} }).on('success', function(order_item) {
+     if (order_item) {
+        order_item.updateAttributes({
+         order_id: odr.order_id,
+         item_id: odr.item_id,
+         unit_number: odr.unit_number,
+         unit_type_id:odr.unit_type_id,
+         color_id: odr.color_id,
+         total_quantity: odr.total_quantity,
+         quantity_unit_type_id: odr.quantity_unit_type_id ,
+         supplier_id: odr.supplier_id,
+         excess_percentage: odr.excess_percentage ,
+         total_quantity_with_excess_percentage: odr.,
+         comment: odr.comment
+     }).success(function() {
+        callback("success");
+     });
+     }
+     })
+
+ }
+
+*/
