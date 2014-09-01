@@ -37,6 +37,19 @@ var color_type_table=require('./node_library/models/color_type.js')(sequelize),
     order_table=require('./node_library/models/order_table.js')(sequelize),
     order_table_items=require('./node_library/models/order_table_items.js')(sequelize);
 
+//item related table association
+color_type_table.hasOne(item_table, { foreignKey: 'item_color'})
+item_type_table.hasOne(item_table, { foreignKey: 'item_type'})
+supplier_table.hasOne(item_table, { foreignKey: 'item_supplier'})
+unit_type_table.hasOne(item_table, { foreignKey: 'unit_type'})
+
+item_table.belongsTo(color_type_table, { foreignKey: 'item_color'}).belongsTo(item_type_table, { foreignKey: 'item_type'}).belongsTo(unit_type_table, { foreignKey: 'unit_type'}).belongsTo(supplier_table, { foreignKey: 'item_supplier'});
+
+//order related table association
+buyer_table.hasOne(order_table, { foreignKey: 'buyer_id'})
+style_table.hasOne(order_table, { foreignKey: 'style_id'})
+order_table.belongsTo(buyer_table, { foreignKey: 'buyer_id'}).belongsTo(style_table, { foreignKey: 'style_id'});
+
 sequelize
     .sync({ force: false })
     .complete(function(err) {
@@ -50,7 +63,7 @@ sequelize
 app.get('/', function(req, res){
   res.send('Hello World');
 });
-
+//item manager input starts
 app.get('/unit-input', function(req, res){
     unit_type_table.findAll().complete(function(err, utt) {
         res.setHeader('Content-Type', 'application/json');
@@ -62,7 +75,6 @@ app.get('/unit-input', function(req, res){
 app.post('/unit-input', function(req, res) {
     console.log(req.body);
 });
-
 app.get('/color_type_input', function(req, res){
     color_type_table.findAll().complete(function(err, ctt) {
         res.setHeader('Content-Type', 'application/json');
@@ -72,13 +84,9 @@ app.get('/color_type_input', function(req, res){
 
     })
 });
-
 app.post('/color_type_input', function(req, res) {
     console.log(req.body);
 });
-
-
-
 app.get('/item_type_input', function(req, res){
     item_type_table.findAll().complete(function(err, ctt) {
         res.setHeader('Content-Type', 'application/json');
@@ -88,11 +96,9 @@ app.get('/item_type_input', function(req, res){
 
     })
 });
-
 app.post('/item_type_input', function(req, res) {
     console.log(req.body);
 });
-
 app.get('/supplier_input', function(req, res){
     supplier_table.findAll().complete(function(err, sptt) {
         res.setHeader('Content-Type', 'application/json');
@@ -105,16 +111,17 @@ app.get('/supplier_input', function(req, res){
 app.post('/supplier_input', function(req, res) {
     console.log(req.body);
 });
+//item manager input ends
+
 //list show
 app.get('/item_list', function(req, res){
-    ShowAllItem(function(list) {
+    Allitem(function(dta) {
         res.setHeader('Content-Type', 'application/json');
-        res.send(list);
+        res.send(dta);
         res.end("");
 
     })
 });
-
 app.post('/item_list', function(req, res) {
     console.log(req.body);
 });
@@ -129,56 +136,6 @@ app.get('/itemdes_list', function(req, res){
 });
 
 app.post('/itemdes_list', function(req, res) {
-    console.log(req.body);
-});
-
-app.get('/item_description_list', function(req, res){
-    showAlldescription(function(description) {
-        res.setHeader('Content-Type', 'application/json');
-        res.send(description);
-        res.end("");
-
-    })
-});
-
-app.post('/item_description_list', function(req, res) {
-    console.log(req.body);
-});
-
-app.get('/unit_list', function(req, res){
-    ShowAllUnit(function(unit_list) {
-        res.setHeader('Content-Type', 'application/json');
-        res.send(unit_list);
-        res.end("");
-
-    })
-});
-
-app.post('/unit_list', function(req, res) {
-    console.log(req.body);
-});
-
-app.get('/color_list', function(req, res){
-    ShowAllColor(function(color_list) {
-        res.setHeader('Content-Type', 'application/json');
-        res.send(color_list);
-        res.end("");
-    })
-});
-
-app.post('/color_list', function(req, res) {
-    console.log(req.body);
-});
-
-app.get('/supplier_list', function(req, res){
-    ShowAllSupplier(function(supplier_list) {
-        res.setHeader('Content-Type', 'application/json');
-        res.send(supplier_list);
-        res.end("");
-    })
-});
-
-app.post('/supplier_list', function(req, res) {
     console.log(req.body);
 });
 
@@ -208,20 +165,6 @@ app.get('/style_list', function(req, res){
 app.post('/style_list', function(req, res) {
     console.log(req.body);
 });
-
-/*app.get('/order_list', function(req, res){
-    ShowAllOrder(function(orderlst) {
-        res.setHeader('Content-Type', 'application/json');
-        res.send(orderlst);
-        res.end("");
-
-    })
-});
-
-app.post('/order_list', function(req, res) {
-    console.log(req.body);
-});
-*/
 
 io.on('connection', function (socket) {
     console.log("A stranger have want to mass with me. ;D");
@@ -261,10 +204,11 @@ io.on('connection', function (socket) {
         buyerupdater(data, function(data){
             stylerupdater(data,function(data){
                 console.log("style")
-                AddOrder(data)
-                console.log("order_table is updated")
-                AddOrderItems(data)
-                console.log("order_items is updated")
+                AddOrder(data,function(data){
+                    console.log("order_table is updated")
+                    AddOrderItems(data)
+                    console.log("order_items is updated")
+                })
 
             })
         })
@@ -284,13 +228,10 @@ io.on('connection', function (socket) {
     });
 */
 
-
 });
 
 
-
 //update Table
-
 
 
 function colorupdater(SUB, callback)
@@ -391,52 +332,30 @@ function UpdateItem(item,callback)
     })
 }
 
-
-function ShowAllItem(callback)
+function Allitem(callback)
 {
-    sequelize.query("SELECT a.id, a.item_name, a.item_description, b.id AS item_type_id, b.item_type_name, c.id AS color_type_id, c.color_type_name, s.id AS supplier_id, s.supplier_name, u.id AS unit_type_id, u.unit_type_name, a.item_comment FROM item a, item_type b, color_type c, supplier s, unit_type u WHERE a.item_type = b.id AND a.item_color = c.id AND a.item_supplier = s.id AND a.unit_type = u.id ORDER BY a.id ASC").success(function (item) {
-        callback(item)
-    });
+    item_table.findAll({ include: [{ model: color_type_table, attributes: ['color_type_name'] }
+                                  ,{ model: item_type_table, attributes: ['item_type_name'] }
+                                  ,{ model: supplier_table, attributes: ['supplier_name'] }
+                                  ,{ model: unit_type_table, attributes: ['unit_type_name'] }]
+
+
+    }).success(function(tasks) {
+        console.log(JSON.stringify(tasks, null, 4))
+        callback(tasks)
+    })
 }
 
 function Showitdes(callback)
 {
-    sequelize.query("SELECT a.item_name, a.item_description, c.color_type_name, s.supplier_name FROM item a, color_type c, supplier s WHERE a.item_color = c.id AND a.item_supplier = s.id ORDER BY a.id ASC").success(function (item) {
+   item_table.findAll({ include: [{ model: color_type_table, attributes: ['color_type_name'] }
+                                  ,{ model: supplier_table, attributes: ['supplier_name'] }],
+                            attributes: ['id','item_name','item_description']
+    }).success(function(item) {
+        console.log(JSON.stringify(item, null, 4))
         callback(item)
-    });
+    })
 }
-
-
-function showAlldescription(callback)
-{
-
-    sequelize.query("SELECT a.item_description  FROM item a ").success(function (descrip) {
-        callback(descrip)
-    });
-}
-
-
-function ShowAllUnit(callback)
-{
-    sequelize.query("SELECT id,unit_type_name From unit_type").success(function (unititem) {
-        callback(unititem)
-    });
-}
-
-function ShowAllColor(callback)
-{
-    sequelize.query("SELECT id,color_type_name From color_type").success(function (colorlist) {
-        callback(colorlist)
-    });
-}
-function ShowAllSupplier(callback)
-{
-    sequelize.query("SELECT id, supplier_name From supplier").success(function (supplierlist) {
-        callback(supplierlist)
-    });
-}
-
-
 
 /*Order,buyer,style input function*/
 
@@ -507,8 +426,6 @@ function AddOrderItems(ORDER)
         }).complete(function (err, orderitem) {
            console.log("order ENTERED "+ORDER);
         })
-
-
 }
 /*
 function ShowAllOrder(callback)
@@ -543,4 +460,104 @@ function ShowAllOrder(callback)
 
  }
 
+ function ShowAllItem(callback)
+ {
+ sequelize.query("SELECT a.id, a.item_name, a.item_description, b.id AS item_type_id, b.item_type_name, c.id AS color_type_id, c.color_type_name, s.id AS supplier_id, s.supplier_name, u.id AS unit_type_id, u.unit_type_name, a.item_comment FROM item a, item_type b, color_type c, supplier s, unit_type u WHERE a.item_type = b.id AND a.item_color = c.id AND a.item_supplier = s.id AND a.unit_type = u.id ORDER BY a.id ASC").success(function (item) {
+ callback(item)
+
+ sequelize.query("SELECT a.id AS item_id,a.item_name, a.item_description, c.color_type_name, s.supplier_name FROM item a, color_type c, supplier s WHERE a.item_color = c.id AND a.item_supplier = s.id ORDER BY a.id ASC")
+ });
+ }
+ app.get('/item_description_list', function(req, res){
+ showAlldescription(function(description) {
+ res.setHeader('Content-Type', 'application/json');
+ res.send(description);
+ res.end("");
+
+ })
+ });
+
+ app.post('/item_description_list', function(req, res) {
+ console.log(req.body);
+ });
+
+ app.get('/unit_list', function(req, res){
+ ShowAllUnit(function(unit_list) {
+ res.setHeader('Content-Type', 'application/json');
+ res.send(unit_list);
+ res.end("");
+
+ })
+ });
+
+ app.post('/unit_list', function(req, res) {
+ console.log(req.body);
+ });
+
+ app.get('/color_list', function(req, res){
+ ShowAllColor(function(color_list) {
+ res.setHeader('Content-Type', 'application/json');
+ res.send(color_list);
+ res.end("");
+ })
+ });
+
+ app.post('/color_list', function(req, res) {
+ console.log(req.body);
+ });
+
+ app.get('/supplier_list', function(req, res){
+ ShowAllSupplier(function(supplier_list) {
+ res.setHeader('Content-Type', 'application/json');
+ res.send(supplier_list);
+ res.end("");
+ })
+ });
+
+ app.post('/supplier_list', function(req, res) {
+ console.log(req.body);
+ });
+
+ function showAlldescription(callback)
+ {
+
+ sequelize.query("SELECT a.item_description  FROM item a ").success(function (descrip) {
+ callback(descrip)
+ });
+ }
+
+
+ function ShowAllUnit(callback)
+ {
+ sequelize.query("SELECT id,unit_type_name From unit_type").success(function (unititem) {
+ callback(unititem)
+ });
+ }
+
+ function ShowAllColor(callback)
+ {
+ sequelize.query("SELECT id,color_type_name From color_type").success(function (colorlist) {
+ callback(colorlist)
+ });
+ }
+ function ShowAllSupplier(callback)
+ {
+ sequelize.query("SELECT id, supplier_name From supplier").success(function (supplierlist) {
+ callback(supplierlist)
+ });
+ }
 */
+
+/*app.get('/order_list', function(req, res){
+ ShowAllOrder(function(orderlst) {
+ res.setHeader('Content-Type', 'application/json');
+ res.send(orderlst);
+ res.end("");
+
+ })
+ });
+
+ app.post('/order_list', function(req, res) {
+ console.log(req.body);
+ });
+ */
