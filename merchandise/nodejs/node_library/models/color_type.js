@@ -1,15 +1,14 @@
 var Sequelize = require('sequelize')
-var type_color;
+var color_type;
 
 module.exports = function(sequelize){
 
-    type_color = sequelize.define('type_color', {
-        name: {type: Sequelize.STRING, unique: true},
+    color_type = sequelize.define('ColorType', {
+        color_type_name: {type: Sequelize.STRING, unique: true},
         comment: Sequelize.TEXT
     },{
-        tableName: 'type_color',
-        underscored: true
+        tableName: 'color_type'
     })
 
-    return type_color;
+    return color_type;
 }

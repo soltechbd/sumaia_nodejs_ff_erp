@@ -45,12 +45,11 @@ unit_type_table.hasOne(item_table, { foreignKey: 'unit_type'})
 
 item_table.belongsTo(color_type_table, { foreignKey: 'item_color'}).belongsTo(item_type_table, { foreignKey: 'item_type'}).belongsTo(unit_type_table, { foreignKey: 'unit_type'}).belongsTo(supplier_table, { foreignKey: 'item_supplier'});
 
-
 //order related table association
-/*buyer_table.hasOne(order_table, { foreignKey: 'buyer_id'})
+buyer_table.hasOne(order_table, { foreignKey: 'buyer_id'})
 style_table.hasOne(order_table, { foreignKey: 'style_id'})
 order_table.belongsTo(buyer_table, { foreignKey: 'buyer_id'}).belongsTo(style_table, { foreignKey: 'style_id'});
-*/
+
 sequelize
     .sync({ force: false })
     .complete(function(err) {
@@ -172,7 +171,7 @@ io.on('connection', function (socket) {
 
     socket.on('all_input',function(data){
 
-        console.log("STEP 1: "+JSON.stringify(data, null, 4))
+        console.log("STEP 1: "+JSON.stringify(data))
 
         colorupdater(data, function(data){
             itemupdater(data,function(data){
@@ -188,12 +187,12 @@ io.on('connection', function (socket) {
     socket.on('all_store_item',function(updateitem){
 
         var updatedITEMS=JSON.parse(updateitem)
-        console.log("Update Send"+JSON.stringify(updatedITEMS, null, 4))
+        //console.log("STEP 1: "+JSON.stringify(updatedITEMS))
 
         for (var i = 0; i < updatedITEMS.length; i++) {
             console.log("Item ID:"+updatedITEMS[i].id)
             UpdateItem(updatedITEMS[i],function(m){
-                console.log(JSON.stringify(updatedITEMS, null, 4))
+                console.log(m)
             })
         }
     });
@@ -235,82 +234,78 @@ io.on('connection', function (socket) {
 //update Table
 
 
-function colorupdater(SUB_ITEM, callback)
+function colorupdater(SUB, callback)
 {
-    if(SUB_ITEM.colors.new_color_found){
+    if(SUB.colors.new_color_found){
         color_type_table.create({
-            name: SUB_ITEM.colors.value,
+            color_type_name: SUB.colors.value,
             comment: ""
         }).complete(function(err, colo_type) {
-            console.log(JSON.stringify(colo_type, null, 4))
-            SUB_ITEM.colors.value=colo_type.id; // Changing value to new color id
-            callback(SUB_ITEM)
+            SUB.colors.value=colo_type.id; // Changing value to new color id
+            callback(SUB)
         })
     }else{
-        callback(SUB_ITEM)
+        callback(SUB)
     }
 }
 
-function itemupdater(SUB_ITEM, callback)
+function itemupdater(SUB, callback)
 {
-    if(SUB_ITEM.itemTypes.new_itemType_found){
+    if(SUB.itemTypes.new_itemType_found){
         item_type_table.create({
-            name: SUB_ITEM.itemTypes.value,
-            status: "",
+            item_type_name: SUB.itemTypes.value,
+            item_type_status: "",
             comment: ""
         }).complete(function(err, item_typ) {
-            console.log(JSON.stringify(item_typ, null, 4))
-            SUB_ITEM.itemTypes.value=item_typ.id; // Changing value to new item type id
-            callback(SUB_ITEM)
+            SUB.itemTypes.value=item_typ.id; // Changing value to new item type id
+            callback(SUB)
         })
     }else{
-        callback(SUB_ITEM)
+        callback(SUB)
     }
 }
 
-function unitupdater(SUB_ITEM, callback)
+function unitupdater(SUB, callback)
 {
-    if(SUB_ITEM.unitTypes.new_unitType_found){
+    if(SUB.unitTypes.new_unitType_found){
         unit_type_table.create({
-            name: SUB_ITEM.unitTypes.value,
+            unit_type_name: SUB.unitTypes.value,
             comment: ""
         }).complete(function (err, uni_typ) {
-            console.log(JSON.stringify(uni_typ, null, 4))
-            SUB_ITEM.unitTypes.value = uni_typ.id; // Changing value to new unit id
-            callback(SUB_ITEM)
+            SUB.unitTypes.value = uni_typ.id; // Changing value to new unit id
+            callback(SUB)
         })
     }else{
-        callback(SUB_ITEM)
+        callback(SUB)
     }
 }
 
-function  supplyupdater(SUB_ITEM, callback) {
-    if(SUB_ITEM.suppliers.new_supplier_found){
+function  supplyupdater(SUB, callback) {
+    if(SUB.suppliers.new_supplier_found){
         supplier_table.create({
-            name: SUB_ITEM.suppliers.value,
+            supplier_name: SUB.suppliers.value,
             comment: ""
         }).complete(function (err,suplier) {
-            console.log(JSON.stringify(suplier, null, 4))
-            SUB_ITEM.suppliers.value = suplier.id; // Changing value to new Supplier id
-            callback(SUB_ITEM)
+            SUB.suppliers.value = suplier.id; // Changing value to new Supplier id
+            callback(SUB)
         })
     }else{
-        callback(SUB_ITEM)
+        callback(SUB)
     }
 }
 
-function AddNewItem (SUB_ITEM)
+function AddNewItem (SUB)
 {
-    if(!validator.isNull(SUB_ITEM.itemTypes.value) && !validator.isNull(SUB_ITEM.unitTypes.value) && !validator.isNull(SUB_ITEM.colors.value) && !validator.isNull(SUB_ITEM.suppliers.value)) {
+    if(!validator.isNull(SUB.itemTypes.value) && !validator.isNull(SUB.unitTypes.value) && !validator.isNull(SUB.colors.value) && !validator.isNull(SUB.suppliers.value)) {
 
         item_table.create({
-            item_name: SUB_ITEM.name,
-            item_type: SUB_ITEM.itemTypes.value,
-            unit_type: SUB_ITEM.unitTypes.value,
-            item_description: SUB_ITEM.descrip,
-            item_color: SUB_ITEM.colors.value,
-            item_supplier: SUB_ITEM.suppliers.value,
-            item_comment: SUB_ITEM.comm
+            item_name: SUB.name,
+            item_type: SUB.itemTypes.value,
+            unit_type: SUB.unitTypes.value,
+            item_description: SUB.descrip,
+            item_color: SUB.colors.value,
+            item_supplier: SUB.suppliers.value,
+            item_comment: SUB.comm
         }).complete(function (err, item) {
             // console.log("ITEM ENTERED "+item.id);
         })
@@ -324,11 +319,11 @@ function UpdateItem(item,callback)
         if (project) {
             project.updateAttributes({
                  item_name: item.item_name,
-                 item_type: item.typeItem.id,
-                 unit_type: item.typeUnit.id,
+                 item_type: item.item_type_id,
+                 unit_type: item.unit_type_id,
                  item_description:item.item_description,
-                 item_color: item.typeColor.id,
-                 item_supplier: item.supplier.id,
+                 item_color: item.color_type_id,
+                 item_supplier: item.supplier_id,
                  item_comment: item.item_comment
              }).success(function() {
                     callback("success");
@@ -339,22 +334,22 @@ function UpdateItem(item,callback)
 
 function Allitem(callback)
 {
-    item_table.findAll({ include: [{ model: color_type_table, attributes: ['name'] }
-                                  ,{ model: item_type_table, attributes: ['name'] }
-                                  ,{ model: supplier_table, attributes: ['name'] }
-                                  ,{ model: unit_type_table, attributes: ['name'] }]
+    item_table.findAll({ include: [{ model: color_type_table, attributes: ['color_type_name'] }
+                                  ,{ model: item_type_table, attributes: ['item_type_name'] }
+                                  ,{ model: supplier_table, attributes: ['supplier_name'] }
+                                  ,{ model: unit_type_table, attributes: ['unit_type_name'] }]
 
 
     }).success(function(tasks) {
-        console.log(">hit"+JSON.stringify(tasks, null, 4))
+        console.log(JSON.stringify(tasks, null, 4))
         callback(tasks)
     })
 }
 
 function Showitdes(callback)
 {
-   item_table.findAll({ include: [{ model: color_type_table, attributes: ['name'] }
-                                  ,{ model: supplier_table, attributes: ['name'] }],
+   item_table.findAll({ include: [{ model: color_type_table, attributes: ['color_type_name'] }
+                                  ,{ model: supplier_table, attributes: ['supplier_name'] }],
                             attributes: ['id','item_name','item_description']
     }).success(function(item) {
         console.log(JSON.stringify(item, null, 4))

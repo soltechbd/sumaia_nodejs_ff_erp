@@ -3,7 +3,7 @@ var order_table;
 
 module.exports = function(sequelize){
 
-    order_table = sequelize.define('order_table', {
+    order_table = sequelize.define('neworder_table', {
 
         buyer_id:  {
             type: Sequelize.INTEGER,
@@ -21,8 +21,7 @@ module.exports = function(sequelize){
         meta_data: Sequelize.TEXT
 
     },{
-        tableName: 'order_table',
-        underscored: true
+        tableName: 'order_table'
     })
 
     return order_table;

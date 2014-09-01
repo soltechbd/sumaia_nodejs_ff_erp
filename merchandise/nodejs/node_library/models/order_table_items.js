@@ -3,7 +3,7 @@ var order_items_table;
 
 module.exports = function(sequelize){
 
-    order_items_table = sequelize.define('order_items_table', {
+    order_items_table = sequelize.define('neworder_table_items', {
 
         order_id: {
             type: Sequelize.INTEGER,
@@ -18,12 +18,12 @@ module.exports = function(sequelize){
         unit_number: Sequelize.INTEGER,
         unit_type_id: {
             type: Sequelize.INTEGER,
-            references: "type_unit",
+            references: "unit_type",
             referencesKey: "id"
         },
         color_id: {
             type: Sequelize.INTEGER,
-            references: "type_color",
+            references: "color_type",
             referencesKey: "id"
         },
         total_quantity: Sequelize.INTEGER,
@@ -38,8 +38,7 @@ module.exports = function(sequelize){
         comment: Sequelize.TEXT
 
     },{
-        tableName: 'order_items_table',
-        underscored: true
+        tableName: 'order_items_table'
     })
 
     return order_items_table;

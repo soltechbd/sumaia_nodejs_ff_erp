@@ -1,16 +1,15 @@
 var Sequelize = require('sequelize')
-var type_item;
+var item_type;
 
 module.exports = function(sequelize){
 
-    type_item = sequelize.define('type_item', {
-        name:{type: Sequelize.STRING, unique: true},
-        status: Sequelize.TEXT,
+    item_type = sequelize.define('itemType', {
+        item_type_name:{type: Sequelize.STRING, unique: true},
+        item_type_status: Sequelize.TEXT,
         comment: Sequelize.TEXT
     },{
-        tableName: 'type_item',
-        underscored: true
+        tableName: 'item_type'
     })
 
-    return type_item;
+    return item_type;
 }

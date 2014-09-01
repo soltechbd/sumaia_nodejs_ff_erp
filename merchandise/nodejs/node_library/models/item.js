@@ -3,22 +3,22 @@ var item;
 
 module.exports = function (sequelize) {
 
-    item = sequelize.define('item', {
+    item = sequelize.define('newitem', {
         item_name: Sequelize.STRING,
         item_type: {
             type: Sequelize.INTEGER,
-            references: "type_item",
+            references: "item_type",
             referencesKey: "id"
         },
         unit_type: {
             type: Sequelize.INTEGER,
-            references: "type_unit",
+            references: "unit_type",
             referencesKey: "id"
         },
         item_description: Sequelize.STRING,
         item_color: {
             type: Sequelize.INTEGER,
-            references: "type_color",
+            references: "color_type",
             referencesKey: "id"
         },
 
@@ -29,8 +29,7 @@ module.exports = function (sequelize) {
         },
         item_comment: Sequelize.STRING
     }, {
-        tableName: 'item',
-        underscored: true
+        tableName: 'item'
     })
 
     return item;
