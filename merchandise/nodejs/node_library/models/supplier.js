@@ -3,11 +3,12 @@ var supplier;
 
 module.exports = function(sequelize){
 
-    supplier = sequelize.define('newsupplier', {
-        supplier_name: {type: Sequelize.STRING, unique: true},
+    supplier = sequelize.define('supplier', {
+       name: {type: Sequelize.STRING, unique: true},
         comment: Sequelize.TEXT
     },{
-        tableName: 'supplier'
+        tableName: 'supplier',
+        underscored: true
     })
 
     return supplier;

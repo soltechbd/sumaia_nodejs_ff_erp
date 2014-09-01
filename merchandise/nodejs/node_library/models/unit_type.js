@@ -1,14 +1,15 @@
 var Sequelize = require('sequelize')
-var unit_type;
+var type_unit;
 
 module.exports = function(sequelize){
 
-    unit_type = sequelize.define('UnitType', {
-        unit_type_name: {type: Sequelize.STRING, unique: true},
+    type_unit = sequelize.define('type_unit', {
+        name: {type: Sequelize.STRING, unique: true},
         comment: Sequelize.TEXT
     },{
-        tableName: 'unit_type'
+        tableName: 'type_unit',
+        underscored: true
     })
 
-    return unit_type;
+    return type_unit;
 }
