@@ -5,29 +5,28 @@ module.exports = function (sequelize) {
 
     item = sequelize.define('newitem', {
         item_name: Sequelize.STRING,
-        item_type:Sequelize.INTEGER, /*{
+        item_type: {
             type: Sequelize.INTEGER,
             references: "item_type",
             referencesKey: "id"
-        },*/
-        unit_type:Sequelize.INTEGER,/* {
+        },
+        unit_type: {
             type: Sequelize.INTEGER,
             references: "unit_type",
             referencesKey: "id"
-        },*/
+        },
         item_description: Sequelize.STRING,
-        item_color:Sequelize.INTEGER,/* {
+        item_color: {
             type: Sequelize.INTEGER,
             references: "color_type",
             referencesKey: "id"
         },
-*/
-        item_supplier: Sequelize.INTEGER,
-        /* {
+
+        item_supplier: {
             type: Sequelize.INTEGER,
             references: "supplier",
             referencesKey: "id"
-        },*/
+        },
         item_comment: Sequelize.STRING
     }, {
         tableName: 'item'
